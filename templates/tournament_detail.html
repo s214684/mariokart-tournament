@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ tournament.name }}</h1>
+{% if tournament.status == 'completed' %}
+<div class="alert alert-success">
+    <h4>🏆 Tournament Completed!</h4>
+    <p>This tournament has ended. You can still view the results below.</p>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Players ({{ players|length }})</h2>
+        <ul class="list-group">
+            {% for player in players %}
+            <li class="list-group-item">{{ player.name }}</li>
+            {% endfor %}
+        </ul>
+
+        {% if tournament.status == 'active' %}
+        <form method="post" action="{{ url_for('add_player', tournament_id=tournament.id) }}" class="mt-3">
+            <div class="mb-3">
+                <label for="name" class="form-label">Add Player</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add</button>
+        </form>
+
+        {% if players|length >= 4 %}
+        <a href="{{ url_for('generate_bracket', tournament_id=tournament.id) }}" class="btn btn-warning mt-2">Create New Match</a>
+        {% endif %}
+
+        {% if matches %}
+        <a href="{{ url_for('end_tournament', tournament_id=tournament.id) }}" class="btn btn-danger mt-2 me-2"
+           onclick="return confirm('Are you sure you want to end this tournament?')">End Tournament</a>
+        <a href="{{ url_for('tournament_results', tournament_id=tournament.id) }}" class="btn btn-info mt-2">
+           📊 View Current Standings</a>
+        {% endif %}
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h2>Matches</h2>
+
+        {% if matches %}
+        <!-- Quick Stats -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 Current Tournament Stats</h5>
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h6>{{ matches|length }}</h6>
+                                <small class="text-muted">Total Matches</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>{{ matches|map(attribute='round')|unique|list|length }}</h6>
+                                <small class="text-muted">Rounds Played</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>{{ matches|selectattr('winner_id')|list|length }}</h6>
+                                <small class="text-muted">Completed Matches</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>{{ matches|rejectattr('winner_id')|list|length }}</h6>
+                                <small class="text-muted">Pending Matches</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not matches %}
+        <div class="alert alert-info">
+            No matches created yet. Add at least 4 players and click "Create New Match" to start playing!
+        </div>
+        {% endif %}
+
+        {% for round_num in matches|map(attribute='round')|unique|list %}
+        <h3 class="mt-4 mb-3">Round {{ round_num }}</h3>
+        <div class="row">
+            {% for match in matches %}
+            {% if match.round == round_num %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm {% if tournament.status == 'completed' %}border-success{% endif %}">
+                    <div class="card-header {% if tournament.status == 'completed' %}bg-success{% else %}bg-primary{% endif %} text-white">
+                        <h5 class="card-title mb-0">Match {{ loop.index }} (Round {{ match.round }})</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="player-card p-2 mb-2 bg-light rounded">
+                                    <strong>{{ match.player1.name }}</strong>
+                                    {% if match.score1 is not none %}
+                                        <span class="badge bg-info ms-2">{{ match.score1 }} pts</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="player-card p-2 mb-2 bg-light rounded">
+                                    <strong>{{ match.player2.name }}</strong>
+                                    {% if match.score2 is not none %}
+                                        <span class="badge bg-info ms-2">{{ match.score2 }} pts</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="player-card p-2 mb-2 bg-light rounded">
+                                    <strong>{{ match.player3.name }}</strong>
+                                    {% if match.score3 is not none %}
+                                        <span class="badge bg-info ms-2">{{ match.score3 }} pts</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="player-card p-2 mb-2 bg-light rounded">
+                                    <strong>{{ match.player4.name }}</strong>
+                                    {% if match.score4 is not none %}
+                                        <span class="badge bg-info ms-2">{{ match.score4 }} pts</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if not match.winner and tournament.status == 'active' %}
+                        <form method="post" action="{{ url_for('record_result', tournament_id=tournament.id, match_id=match.id) }}" class="mt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">{{ match.player1.name }} Score</label>
+                                    <input type="number" name="score1" class="form-control" min="1" max="10" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">{{ match.player2.name }} Score</label>
+                                    <input type="number" name="score2" class="form-control" min="1" max="10" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">{{ match.player3.name }} Score</label>
+                                    <input type="number" name="score3" class="form-control" min="1" max="10" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">{{ match.player4.name }} Score</label>
+                                    <input type="number" name="score4" class="form-control" min="1" max="10" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success mt-3 w-100">Record Scores</button>
+                        </form>
+                        {% elif match.winner %}
+                        <div class="alert alert-success mt-3">
+                            <strong>🏆 Winner: {{ match.winner.name }}</strong>
+                            <br><small class="text-muted">Highest score: {{ [match.score1, match.score2, match.score3, match.score4]|max }} points</small>
+                        </div>
+                        {% elif tournament.status == 'completed' %}
+                        <div class="alert alert-secondary mt-3">
+                            <strong>Match not completed</strong>
+                            <br><small class="text-muted">Tournament has ended</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
