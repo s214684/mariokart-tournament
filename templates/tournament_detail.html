@@ -13,36 +13,103 @@
 
 <div class="row">
     <div class="col-md-4">
-        <h2>Players ({{ players|length }})</h2>
+        <h2>Players ({{ human_players|length }})</h2>
         <ul class="list-group">
-            {% for player in players %}
-            <li class="list-group-item">{{ player.name }}</li>
+            {% for player in human_players %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="d-flex align-items-center">
+                    {% if player.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ player.image_filename) }}" alt="{{ player.name }}" class="rounded me-2" style="width:32px;height:32px;object-fit:cover;">
+                    {% else %}
+                        <span class="me-2 badge bg-secondary">No Photo</span>
+                    {% endif %}
+                    {{ player.name }}
+                </span>
+                {% if tournament.status == 'active' %}
+                <span>
+                    <button class="btn btn-sm btn-outline-secondary me-1" data-edit-url="{{ url_for('edit_player', tournament_id=tournament.id, player_id=player.id) }}" data-current-name="{{ player.name | e }}">Edit</button>
+                    <form method="post" action="{{ url_for('delete_player', tournament_id=tournament.id, player_id=player.id) }}" class="d-inline" onsubmit="return confirm('Delete this player? This cannot be undone.');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                    <form method="post" action="{{ url_for('upload_player_image', tournament_id=tournament.id, player_id=player.id) }}" class="d-inline" enctype="multipart/form-data">
+                        <label class="btn btn-sm btn-outline-primary mb-0">
+                            Upload Photo
+                            <input type="file" name="image" accept="image/*" class="d-none" onchange="this.form.submit()">
+                        </label>
+                    </form>
+                </span>
+                {% endif %}
+            </li>
             {% endfor %}
         </ul>
+        {% if bot_players and bot_players|length > 0 %}
+        <div class="form-text mt-1">{{ bot_players|length }} bot(s) hidden.</div>
+        {% endif %}
 
         {% if tournament.status == 'active' %}
-        <form method="post" action="{{ url_for('add_player', tournament_id=tournament.id) }}" class="mt-3">
+        <form method="post" action="{{ url_for('add_player', tournament_id=tournament.id) }}" class="mt-3" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="name" class="form-label">Add Player</label>
                 <input type="text" class="form-control" id="name" name="name" required>
             </div>
+            <div class="mb-3">
+                <label for="image" class="form-label">Player Photo (optional)</label>
+                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            </div>
             <button type="submit" class="btn btn-success">Add</button>
         </form>
 
-        {% if players|length >= 4 %}
-        <a href="{{ url_for('generate_bracket', tournament_id=tournament.id) }}" class="btn btn-warning mt-2">Create New Match</a>
-        {% endif %}
+    {% if human_players|length >= 2 %}
+    <!-- Plan group stage: N games per player -->
+    <form method="post" action="{{ url_for('plan_schedule', tournament_id=tournament.id) }}" class="mt-2">
+            <div class="input-group">
+                <span class="input-group-text">Games per player</span>
+                <input type="number" class="form-control" name="games_per_player" min="1" max="20" required>
+                <button type="submit" class="btn btn-primary">Plan Group Stage</button>
+            </div>
+            <div class="form-text">Creates balanced 4-player matches so each player plays this many games.</div>
+        </form>
+    {% endif %}
+    {% if players|length >= 4 %}
+    <a href="{{ url_for('generate_bracket', tournament_id=tournament.id) }}" class="btn btn-warning mt-2">Quick Create Match</a>
+    {% endif %}
+    {% if matches and not finals_exists %}
+    <a href="{{ url_for('generate_finals', tournament_id=tournament.id) }}" class="btn btn-outline-dark mt-2">Generate Finals (Top 4)</a>
+    {% endif %}
 
         {% if matches %}
         <a href="{{ url_for('end_tournament', tournament_id=tournament.id) }}" class="btn btn-danger mt-2 me-2"
            onclick="return confirm('Are you sure you want to end this tournament?')">End Tournament</a>
+
+        <form method="post" action="{{ url_for('reset_matches', tournament_id=tournament.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-outline-secondary mt-2 me-2" onclick="return confirm('Reset all matches for this tournament? This will remove match history but keep players.')">Reset Tournament Matches</button>
+        </form>
+
+        <form id="delete-all-form" method="post" action="{{ url_for('delete_all', tournament_id=tournament.id) }}" class="d-inline">
+            <button type="button" id="delete-all-btn" class="btn btn-outline-danger mt-2 me-2">DELETE ALL</button>
+        </form>
+
         <a href="{{ url_for('tournament_results', tournament_id=tournament.id) }}" class="btn btn-info mt-2">
            📊 View Current Standings</a>
+    {% endif %}
         {% endif %}
-        {% endif %}
+
+        <!-- Event Poster / Long Image -->
+        <div class="card mt-3">
+
+            <div class="card-body p-2">
+                <img src="{{ url_for('static', filename='long_image.png') }}" alt="Event Poster" class="img-fluid w-100" style="object-fit:cover;">
+            </div>
+        </div>
     </div>
     <div class="col-md-8">
         <h2>Matches</h2>
+
+        {% if request.args.get('msg') %}
+        <div class="mt-2">
+            <div class="alert alert-{{ alert_cat(request.args.get('cat')) }}">{{ request.args.get('msg') }}</div>
+        </div>
+        {% endif %}
 
         {% if matches %}
         <!-- Quick Stats -->
@@ -51,6 +118,15 @@
                 <div class="card bg-light">
                     <div class="card-body">
                         <h5 class="card-title">📊 Current Tournament Stats</h5>
+                        {% if champion_name %}
+                        <div class="alert alert-success mt-2">
+                            🏆 Final completed — Champion: <strong>{{ champion_name }}</strong>
+                        </div>
+                        {% elif finals_exists %}
+                        <div class="alert alert-warning mt-2">
+                            🏁 Finals created — record results to determine the champion.
+                        </div>
+                        {% endif %}
                         <div class="row text-center">
                             <div class="col-md-3">
                                 <h6>{{ matches|length }}</h6>
@@ -77,7 +153,11 @@
 
         {% if not matches %}
         <div class="alert alert-info">
-            No matches created yet. Add at least 4 players and click "Create New Match" to start playing!
+            No matches created yet. Add at least 4 players, then:
+            <ul class="mb-0">
+                <li>Use <strong>Plan Group Stage</strong> to schedule N games per player, or</li>
+                <li>Use <strong>Quick Create Match</strong> for a single balanced match.</li>
+            </ul>
         </div>
         {% endif %}
 
@@ -95,7 +175,12 @@
                         <div class="row">
                             <div class="col-6">
                                 <div class="player-card p-2 mb-2 bg-light rounded">
-                                    <strong>{{ match.player1.name }}</strong>
+                                    <div class="d-flex align-items-center">
+                                        {% if match.player1.image_filename %}
+                                        <img src="{{ url_for('static', filename='uploads/' ~ match.player1.image_filename) }}" alt="{{ match.player1.name }}" class="rounded me-2" style="width:24px;height:24px;object-fit:cover;">
+                                        {% endif %}
+                                        <strong>{{ match.player1.name }}</strong>
+                                    </div>
                                     {% if match.score1 is not none %}
                                         <span class="badge bg-info ms-2">{{ match.score1 }} pts</span>
                                     {% endif %}
@@ -103,7 +188,12 @@
                             </div>
                             <div class="col-6">
                                 <div class="player-card p-2 mb-2 bg-light rounded">
-                                    <strong>{{ match.player2.name }}</strong>
+                                    <div class="d-flex align-items-center">
+                                        {% if match.player2.image_filename %}
+                                        <img src="{{ url_for('static', filename='uploads/' ~ match.player2.image_filename) }}" alt="{{ match.player2.name }}" class="rounded me-2" style="width:24px;height:24px;object-fit:cover;">
+                                        {% endif %}
+                                        <strong>{{ match.player2.name }}</strong>
+                                    </div>
                                     {% if match.score2 is not none %}
                                         <span class="badge bg-info ms-2">{{ match.score2 }} pts</span>
                                     {% endif %}
@@ -111,7 +201,12 @@
                             </div>
                             <div class="col-6">
                                 <div class="player-card p-2 mb-2 bg-light rounded">
-                                    <strong>{{ match.player3.name }}</strong>
+                                    <div class="d-flex align-items-center">
+                                        {% if match.player3.image_filename %}
+                                        <img src="{{ url_for('static', filename='uploads/' ~ match.player3.image_filename) }}" alt="{{ match.player3.name }}" class="rounded me-2" style="width:24px;height:24px;object-fit:cover;">
+                                        {% endif %}
+                                        <strong>{{ match.player3.name }}</strong>
+                                    </div>
                                     {% if match.score3 is not none %}
                                         <span class="badge bg-info ms-2">{{ match.score3 }} pts</span>
                                     {% endif %}
@@ -119,7 +214,12 @@
                             </div>
                             <div class="col-6">
                                 <div class="player-card p-2 mb-2 bg-light rounded">
-                                    <strong>{{ match.player4.name }}</strong>
+                                    <div class="d-flex align-items-center">
+                                        {% if match.player4.image_filename %}
+                                        <img src="{{ url_for('static', filename='uploads/' ~ match.player4.image_filename) }}" alt="{{ match.player4.name }}" class="rounded me-2" style="width:24px;height:24px;object-fit:cover;">
+                                        {% endif %}
+                                        <strong>{{ match.player4.name }}</strong>
+                                    </div>
                                     {% if match.score4 is not none %}
                                         <span class="badge bg-info ms-2">{{ match.score4 }} pts</span>
                                     {% endif %}
@@ -131,23 +231,48 @@
                         <form method="post" action="{{ url_for('record_result', tournament_id=tournament.id, match_id=match.id) }}" class="mt-3">
                             <div class="row">
                                 <div class="col-6">
-                                    <label class="form-label">{{ match.player1.name }} Score</label>
-                                    <input type="number" name="score1" class="form-control" min="1" max="10" required>
+                                    <label class="form-label">{{ match.player1.name }} Position</label>
+                                    <select class="form-select" name="pos1" required>
+                                        <option value="" selected disabled>Select position</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">{{ match.player2.name }} Score</label>
-                                    <input type="number" name="score2" class="form-control" min="1" max="10" required>
+                                    <label class="form-label">{{ match.player2.name }} Position</label>
+                                    <select class="form-select" name="pos2" required>
+                                        <option value="" selected disabled>Select position</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">{{ match.player3.name }} Score</label>
-                                    <input type="number" name="score3" class="form-control" min="1" max="10" required>
+                                    <label class="form-label">{{ match.player3.name }} Position</label>
+                                    <select class="form-select" name="pos3" required>
+                                        <option value="" selected disabled>Select position</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">{{ match.player4.name }} Score</label>
-                                    <input type="number" name="score4" class="form-control" min="1" max="10" required>
+                                    <label class="form-label">{{ match.player4.name }} Position</label>
+                                    <select class="form-select" name="pos4" required>
+                                        <option value="" selected disabled>Select position</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success mt-3 w-100">Record Scores</button>
+                            <div class="form-text">Enter finishing positions (1 = first, 4 = fourth). Points (4–1) are awarded automatically.</div>
+                            <button type="submit" class="btn btn-success mt-2 w-100">Record Results</button>
                         </form>
                         {% elif match.winner %}
                         <div class="alert alert-success mt-3">
@@ -166,7 +291,68 @@
             {% endif %}
             {% endfor %}
         </div>
+
         {% endfor %}
     </div>
-</div>
+    </div>
+    </div>
+    {% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('submit', function(e){
+    const form = e.target;
+    if (form.matches('form[action*="record_result"]')){
+        const selects = form.querySelectorAll('select[name^="pos"]');
+        const values = Array.from(selects).map(s => s.value);
+        if (values.includes('') || values.length < 4){
+            e.preventDefault();
+            alert('Please select positions 1-4 for all players.');
+            return false;
+        }
+        // Check uniqueness
+        const uniq = new Set(values);
+        if (uniq.size !== values.length){
+            e.preventDefault();
+            alert('Positions must be unique for each player.');
+            return false;
+        }
+    }
+});
+</script>
+<script>
+// Extra confirmation flow for DELETE ALL
+document.getElementById('delete-all-btn')?.addEventListener('click', function(){
+    const step1 = confirm('This will PERMANENTLY delete the tournament and all data. Are you sure?');
+    if (!step1) return;
+    const step2 = prompt('Type DELETE to confirm permanent deletion of this tournament');
+    if (step2 === 'DELETE'){
+        document.getElementById('delete-all-form').submit();
+    } else {
+        alert('Deletion cancelled. You must type DELETE to confirm.');
+    }
+});
+</script>
+<script>
+// Edit player name via prompt and POST
+document.querySelectorAll('button[data-edit-url]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const url = btn.getAttribute('data-edit-url');
+        const current = btn.getAttribute('data-current-name') || '';
+        const name = prompt('Enter new player name', current);
+        if (!name) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'name';
+        input.value = name;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    });
+});
+</script>
 {% endblock %}
+

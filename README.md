@@ -1,48 +1,82 @@
 # Mario Kart Tournament Manager
 
-A Flask-based web application for managing Mario Kart tournaments with single-elimination brackets.
+A comprehensive Flask-based web application for managing Mario Kart tournaments with intelligent matchmaking, flexible tournament formats, and detailed statistics tracking.
 
-## Features
+## ✨ Features
 
-- **Tournament Management**: Create and manage multiple tournaments with status tracking
-- **Flexible Player Participation**: Multiple players can participate in tournaments, but only 4 play per match
-- **4-Player Matches**: Each match features exactly 4 players competing simultaneously
-- **Scoring System**: Players score 1-10 points per match (10 being highest)
-- **Multiple Match Support**: Create multiple matches/rounds within a single tournament
-- **Manual Tournament Control**: Manually create new matches and end tournaments when desired
-- **Automatic Winner Determination**: Player with highest score advances automatically
-- **Match Tracking**: Record match scores and view complete tournament history
-- **Responsive UI**: Clean, Bootstrap-styled interface with enhanced visual design
-- **SQLite Database**: Lightweight, file-based database for easy deployment
+- **🏆 Tournament Management**: Create and manage multiple tournaments with status tracking
+- **👥 Flexible Player Participation**: Support for any number of players with 4-player matches
+- **🎯 Intelligent Matchmaking**: Performance-based algorithm ensures fair and competitive groupings
+- **📊 Advanced Scoring System**: Position-based 1–4 point scale with automatic winner determination
+- **🔄 Multiple Round Support**: Create unlimited rounds with championship-style matchups
+- **🎮 Tournament Formats**: Optimized formats for different player counts (4 to 33+ players)
+- **📈 Live Statistics**: Real-time player rankings, win rates, and performance metrics
+- **🎨 Responsive UI**: Modern Bootstrap 5 interface with intuitive match visualization
+- **💾 SQLite Database**: Lightweight, file-based database for easy deployment
 
-## Tech Stack
+## 🏗️ Tournament Formats
 
-- **Backend**: Python Flask
-- **Database**: SQLite with SQLAlchemy ORM
-- **Frontend**: HTML, CSS, Bootstrap 5
-- **Deployment**: Local development server
+The application supports multiple tournament formats optimized for different player counts:
 
-## Installation
+### 🏆 Micro Tournament (4 Players)
+
+- **Duration**: 15 minutes
+- **Format**: Single 4-player match
+- **Best for**: Quick games and testing
+
+### 🏆 Small Tournament (5-8 Players)
+
+- **Duration**: 45 minutes
+- **Format**: Multiple rounds with balanced groupings
+- **Best for**: Balanced competition with multiple rounds
+
+### 🏆 Medium Tournament (9-16 Players)
+
+- **Duration**: 2 hours
+- **Format**: Pool play with elimination rounds
+- **Best for**: Structured competition with pools
+
+### 🏆 Large Tournament (17-32 Players)
+
+- **Duration**: 4-8 hours
+- **Format**: Qualification + group stage + playoffs
+- **Best for**: Major events with multiple phases
+
+### 🏆 Mega Tournament (33+ Players)
+
+- **Duration**: 8+ hours
+- **Format**: Multi-phase tournament with breaks
+- **Best for**: Large-scale events
+
+## 🛠️ Tech Stack
+
+- **Backend**: Python Flask with SQLAlchemy ORM
+- **Database**: SQLite (file-based, no server required)
+- **Frontend**: HTML5, CSS3, Bootstrap 5
+- **Architecture**: MVC pattern with clean separation of concerns
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.7+
-- pip (Python package installer)
+- pip package manager
 
-### Setup
+### Installation
 
-1. **Clone the repository** (if applicable):
+1. **Clone and navigate to the repository**:
 
    ```bash
    git clone https://github.com/s214684/mariokart-tournament.git
    cd mariokart-tournament
    ```
 
-2. **Create and activate virtual environment**:
+2. **Set up virtual environment**:
 
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   python -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   # venv\Scripts\activate   # Windows
    ```
 
 3. **Install dependencies**:
@@ -57,54 +91,45 @@ A Flask-based web application for managing Mario Kart tournaments with single-el
    python app.py
    ```
 
-5. **Access the application**:
-   Open your browser and navigate to `http://127.0.0.1:5000`
+5. **Open your browser**:
+   Navigate to `http://127.0.0.1:5000`
 
-## Usage
+## 🎮 How to Use
 
-### Creating a Tournament
+### Creating Your First Tournament
 
-1. Navigate to the homepage
-2. Enter a tournament name in the "Create New Tournament" form
-3. Click "Create" to add the tournament
+1. **Start a Tournament**: Enter a tournament name and click "Create"
+2. **Add Players**: Register as many players as you want (minimum 4 to start matches)
+3. **Generate Matches**: Click "Create New Match" to use intelligent matchmaking
+4. **Record Scores**: Enter 1-10 scores for each player in every match
+5. **View Results**: Monitor live standings and final tournament rankings
 
-### Managing Players
+### Intelligent Matchmaking
 
-1. Click on a tournament name to view its details
-2. Use the "Add Player" form to register as many players as you want
-3. Once you have at least 4 players, you can start creating matches
+The system automatically creates balanced matches by:
 
-### Creating Matches
+- **Performance Tracking**: Analyzes player scores and win history
+- **Skill Balancing**: Groups similar skill levels together
+- **Fair Distribution**: Ensures everyone plays roughly the same number of matches
+- **Championship Rounds**: Features best-vs-best matchups in later rounds
 
-1. On the tournament detail page, click "Create New Match"
-2. The system uses a fair matchmaking algorithm to create balanced groups:
-   - Players are mixed by skill level to ensure competitive matches
-   - Championship rounds feature best vs best and worst vs worst matchups
-   - Everyone gets roughly equal playing opportunities
-3. You can create multiple matches/rounds as needed
+### Scoring
 
-### Recording Results
+Matches use finishing positions (1–4), which are mapped to points on a 1–4 scale:
 
-1. On the tournament detail page, you'll see all created matches
-2. Each match displays 4 players in a visually appealing card layout
-3. For each match, enter scores (1-10) for all 4 players
-4. Click "Record Scores" to save and automatically determine the winner (highest score)
-5. Create additional matches as needed for more rounds
+- 1st place → 4 points
+- 2nd place → 3 points
+- 3rd place → 2 points
+- 4th place → 1 point
 
-### Viewing Standings
+This mapping is configurable in `constants.py` (`POSITION_POINTS`). Bots are supported via planned matches but excluded from standings and finals.
 
-1. Click "View Current Standings" to see live tournament statistics
-2. View player rankings, win rates, and performance metrics
-3. Monitor tournament progress with real-time statistics
+### Tournament Management
 
-### Ending a Tournament
-
-1. When you're ready to finish the tournament, click "End Tournament"
-2. View the final results page with:
-   - 1st, 2nd, and 3rd place podium display
-   - Complete player rankings table
-   - Tournament summary statistics
-   - Individual player performance metrics
+- **Multiple Rounds**: Create unlimited rounds as needed
+- **Live Statistics**: View real-time player rankings and performance metrics
+- **Manual Control**: Decide when to create matches and end tournaments
+- **Flexible Formats**: Adapt to different player counts automatically
 
 ## Project Structure
 
@@ -155,16 +180,96 @@ mariokart-tournament/
 - `winner_id`: Foreign key to Player (determined by highest score)
 - `tournament_id`: Foreign key to Tournament
 
-## API Endpoints
+## 📊 API Endpoints
 
-- `GET /`: Homepage - list tournaments and create new
-- `POST /create_tournament`: Create a new tournament
-- `GET /tournament/<id>`: View tournament details
-- `POST /tournament/<id>/add_player`: Add a player to tournament
-- `GET /tournament/<id>/generate_bracket`: Create new matches for tournament
-- `POST /tournament/<id>/record_result/<match_id>`: Record match result
-- `GET /tournament/<id>/end_tournament`: End the tournament
-- `GET /tournament/<id>/results`: View tournament results and rankings
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Homepage - list tournaments and create new |
+| `POST` | `/create_tournament` | Create a new tournament |
+| `GET` | `/tournament/<id>` | View tournament details and matches |
+| `POST` | `/tournament/<id>/add_player` | Add a player to tournament |
+| `GET` | `/tournament/<id>/generate_bracket` | Create new matches with intelligent matchmaking |
+| `POST` | `/tournament/<id>/record_result/<match_id>` | Record match scores and determine winner |
+| `GET` | `/tournament/<id>/end_tournament` | End tournament and show final results |
+| `GET` | `/tournament/<id>/results` | View tournament results and rankings |
+
+## 🗂️ Project Structure
+
+```text
+mariokart-tournament/
+├── app.py                 # Main Flask application & database setup
+├── models.py              # SQLAlchemy database models
+├── routes.py              # Flask routes and tournament logic
+├── requirements.txt       # Python dependencies
+├── TOURNAMENT_PLAN.md     # Tournament format strategies
+├── .github/
+│   └── copilot-instructions.md  # AI agent guidelines
+├── instance/
+│   └── mariokart_tournament.db  # SQLite database
+├── templates/
+│   ├── base.html          # Base HTML template
+│   ├── index.html         # Homepage
+│   ├── tournament_detail.html  # Tournament management
+│   └── tournament_results.html # Results and rankings
+├── static/                # Static assets (CSS, JS, images)
+└── README.md              # This file
+```
+
+## 🗃️ Database Schema
+
+### Tournament Model
+
+- `id`: Primary key
+- `name`: Tournament name (max 100 chars)
+- `created_at`: Creation timestamp
+- `status`: 'active' or 'completed'
+
+### Player Model
+
+- `id`: Primary key
+- `name`: Player name (max 100 chars)
+- `tournament_id`: Foreign key to Tournament
+
+### Match Model
+
+- `id`: Primary key
+- `round`: Round number
+- `player1_id` through `player4_id`: Foreign keys to Players
+- `score1` through `score4`: Points (1–4, nullable)
+- `winner_id`: Foreign key to winning Player
+- `tournament_id`: Foreign key to Tournament
+
+## 🔧 Development
+
+### Database Changes
+
+For schema modifications:
+
+```bash
+# 1. Update models in models.py
+# 2. Delete existing database
+rm instance/mariokart_tournament.db
+# 3. Restart application (auto-creates new schema)
+python app.py
+```
+
+### Testing
+
+```bash
+# Run tournament format tests
+python test_formats.py
+
+# Manual testing with different player counts
+# Create tournaments with 4, 8, 16, 32+ players
+# Verify matchmaking and statistics calculations
+```
+
+### Code Quality
+
+- **Linting**: Follow PEP 8 Python style guidelines
+- **Error Handling**: Validate all user inputs and database operations
+- **Security**: Sanitize user inputs to prevent injection attacks
+- **Performance**: Optimize database queries for large tournaments
 
 ## Development
 
@@ -191,25 +296,69 @@ If you need to modify the database schema:
 - **Real-time Updates**: Implement WebSockets for live tournament tracking
 - **Statistics**: Add player win/loss tracking and tournament analytics
 
-## Contributing
+## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and test thoroughly
-4. Commit your changes: `git commit -am 'Add new feature'`
-5. Push to the branch: `git push origin feature-name`
-6. Submit a pull request
+We welcome contributions! Here's how to get started:
 
-## License
+### Development Setup
+
+1. **Fork the repository**
+2. **Create a feature branch**:
+
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make your changes**
+4. **Test thoroughly** with different tournament sizes
+5. **Commit your changes**:
+
+   ```bash
+   git commit -m "Add: brief description of your changes"
+   ```
+
+6. **Push to your branch**:
+
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+7. **Create a Pull Request**
+
+### Guidelines
+
+- **Code Style**: Follow PEP 8 Python conventions
+- **Testing**: Test with various player counts (4, 8, 16, 32+)
+- **Documentation**: Update README for new features
+- **Database**: Document any schema changes
+- **UI/UX**: Ensure responsive design on mobile devices
+
+
+### Planned Features
+
+- [ ] **Real-time Updates**: WebSocket integration for live tournament tracking
+- [ ] **User Authentication**: Login system for tournament organizers
+- [ ] **Advanced Statistics**: Detailed analytics and performance insights
+- [ ] **Tournament Templates**: Pre-configured formats for common scenarios
+- [ ] **Mobile App**: Companion app for score recording
+- [ ] **Bracket Visualization**: Interactive tournament bracket displays
+- [ ] **Team Support**: Team-based tournament management
+- [ ] **Export Features**: PDF reports and data export capabilities
+
+- [ ] **API Enhancement**: RESTful API for external integrations
+- [ ] **Database Optimization**: Query optimization for large tournaments
+- [ ] **Caching**: Implement Redis for improved performance
+- [ ] **Testing Suite**: Comprehensive unit and integration tests
+- [ ] **CI/CD**: Automated testing and deployment pipeline
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## Future Enhancements
+## 🙏 Acknowledgments
 
-- [ ] Integrate jquery-bracket for visual bracket display
-- [ ] Add tournament types (double-elimination, round-robin)
-- [ ] Implement user accounts and permissions
-- [ ] Add tournament statistics and leaderboards
-- [ ] Support for team-based tournaments
-- [ ] Mobile app companion
-- [ ] Real-time notifications for match updates
+- Built with Flask and SQLAlchemy
+- UI powered by Bootstrap 5
+- Tournament format strategies inspired by competitive gaming best practices
+
+---
+
+**🎮 Ready to start your Mario Kart tournament?** Follow the Quick Start guide above and create your first tournament in minutes!

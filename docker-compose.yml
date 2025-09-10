@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  web:
+    build: .
+    image: mariokart-tournament:latest
+    container_name: mariokart-tournament
+    ports:
+      - "8000:8000"
+    environment:
+      - SQLALCHEMY_DATABASE_URI=sqlite:///instance/mariokart_tournament.db
+      - UPLOAD_FOLDER=static/uploads
+    volumes:
+      - ./instance:/app/instance
+      - ./static/uploads:/app/static/uploads
+    restart: unless-stopped
