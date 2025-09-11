@@ -6,7 +6,16 @@ from validators import alert_category
 app = Flask(__name__)
 
 # Allow config via environment variables for production/Docker
-db_uri = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///mariokart_tournament.db')
+db_uri = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///instance/mariokart_tournament.db')
+
+# Normalize relative sqlite paths to absolute paths to avoid issues inside containers / multi-workers
+if db_uri.startswith('sqlite:///') and not db_uri.startswith('sqlite:////'):
+    raw_path = db_uri.replace('sqlite:///', '', 1)
+    # If still relative, make absolute (works on Windows + Linux; we standardize to forward slashes for SQLAlchemy URI)
+    if not os.path.isabs(raw_path):
+        abs_path = os.path.abspath(raw_path)
+        db_uri = 'sqlite:///' + abs_path.replace('\\', '/')
+
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', os.path.join('static', 'uploads'))

@@ -26,6 +26,7 @@ RUN useradd -m appuser && chown -R appuser:appuser ${APP_HOME}
 USER appuser
 
 # Ensure runtime directories
+RUN mkdir -p /app/instance
 RUN mkdir -p instance static/uploads
 
 EXPOSE ${PORT}
@@ -33,4 +34,4 @@ EXPOSE ${PORT}
 ENV SQLALCHEMY_DATABASE_URI="sqlite:///instance/mariokart_tournament.db" \
     UPLOAD_FOLDER="static/uploads"
 
-CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 3 --threads 2 --timeout 120 app:app
+CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 1 --threads 4 --timeout 120 app:app
